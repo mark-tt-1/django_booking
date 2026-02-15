@@ -21,6 +21,28 @@ class RoomViewSet(ModelViewSet):
         return Response(serializer.data)
     
 
+    @action(detail=False, methods=["get"])
+    def free(self, request):
+        start_time = request.GET.get("start_time")
+        end_time = request.GET.get("end_time")
+
+        if not start_time or not end_time:
+            return Response({"error": "start_time and end_time required"})
+
+        if end_time <= start_time:
+            return Response({"error": "end_time must be after start_time"})
+        
+        
+        blocking_bookings = Booking.objects.filter(
+            start_time__lt=end_time,
+            end_time__gt=start_time
+        ).values_list("room_id", flat=True)
+
+        free_rooms = Room.objects.exclude(id__in=blocking_bookings)
+
+        serializer = RoomSerializer(free_rooms, many=True)
+        return Response(serializer.data)
+
 class BookingViewSet(ModelViewSet):
     queryset=Booking.objects.all()
     serializer_class=BookingSerializer
