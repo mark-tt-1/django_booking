@@ -65,6 +65,10 @@ class BookingSerializer(serializers.ModelSerializer):
                 f"Booking created less than 10 minutes before start. "
                 f"User: {user_name}"
             )
+
+        if start_time.hour < 9 or start_time.hour > 18 or end_time.hour < 9 or end_time.hour > 18:
+            raise serializers.ValidationError("Бронирование только с 09:00 до 18:00")
+        
         return data
     
 
